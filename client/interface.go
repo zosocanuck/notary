@@ -68,7 +68,7 @@ type Repository interface {
 
 	// InitializeWithCertificate initializes the repository with root keys and their
 	// corresponding certificates
-	InitializeWithCertificate(rootKeyIDs []string, rootCerts []data.PublicKey, serverManagedRoles ...data.RoleName) error
+	InitializeWithCertificate(rootKeyIDs []string, rootCerts []data.PublicKey, roleKeys map[data.RoleName]data.PublicKey, serverManagedRoles ...data.RoleName) error
 
 	// Publish pushes the local changes in signed material to the remote notary-server
 	// Conceptually it performs an operation similar to a `git rebase`
@@ -142,7 +142,7 @@ type Repository interface {
 	// managing the key to the server. If key(s) are specified by keyList, then they are
 	// used for signing the role.
 	// These changes are staged in a changelist until publish is called.
-	RotateKey(role data.RoleName, serverManagesKey bool, keyList []string) error
+	RotateKey(role data.RoleName, serverManagesKey bool, keystoreName string, token string, keyList []string) error
 
 	// GetCryptoService is the getter for the repository's CryptoService, which is used
 	// to sign all updates.

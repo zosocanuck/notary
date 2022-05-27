@@ -1,3 +1,4 @@
+//go:build pkcs11
 // +build pkcs11
 
 package yubikey
@@ -803,6 +804,28 @@ func (s *YubiStore) RemoveKey(keyID string) error {
 // GetKeyInfo is not yet implemented
 func (s *YubiStore) GetKeyInfo(keyID string) (trustmanager.KeyInfo, error) {
 	return trustmanager.KeyInfo{}, fmt.Errorf("Not yet implemented")
+}
+
+// Generate generates a key and adds it to the keystore.
+func (s *YubiStore) Generate(keyInfo trustmanager.KeyInfo, token, algorithm string) (keyID string, pubKey data.PublicKey, err error) {
+	// Only specialized keystores support multiple tokens.
+	if token != "" {
+		err = fmt.Errorf("key store %s does not support multiple tokens", s.Name())
+		return
+	}
+	// Generate the key
+	var privKey data.PrivateKey
+	if privKey, err = utils.GenerateKey(algorithm); err != nil {
+		return
+	}
+	// Compute the public key
+	pubKey = data.PublicKeyFromPrivate(privKey)
+	// Add it to the key store
+	if err = s.AddKey(keyInfo, privKey); err == nil {
+		return
+	}
+	// Success
+	return
 }
 
 func cleanup(ctx IPKCS11Ctx, session pkcs11.SessionHandle) {
