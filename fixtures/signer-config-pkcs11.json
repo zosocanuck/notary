@@ -10,7 +10,7 @@
 	},
 	"storage": {
 		"backend": "pkcs11",
-		"provider": "/opt/nfast/toolkits/pkcs11/libcknfast.so",
-		"token": "label:ocs2"
+		"provider": "/opt/venafi/codesign/lib/venafipkcs11.so",
+		"token": "label:Remote Token"
 	}
 }
