@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/theupdateframework/notary"
 	"github.com/theupdateframework/notary/trustmanager"
+	"github.com/theupdateframework/notary/trustmanager/p11store"
 	"github.com/theupdateframework/notary/tuf/data"
 	"github.com/theupdateframework/notary/tuf/utils"
 )
@@ -91,7 +92,22 @@ func (cs *CryptoService) Create(role data.RoleName, gun data.GUN, algorithm stri
 
 // GetPrivateKey returns a private key and role if present by ID.
 func (cs *CryptoService) GetPrivateKey(keyID string) (k data.PrivateKey, role data.RoleName, err error) {
+	//println(keyID)
 	for _, ks := range cs.keyStores {
+		if ks.Name() == "pkcs11" {
+			println("PKCS#11 keystore")
+			pkcs11, _ := p11store.NewPkcs11Store("", func(keyName, alias string, createNew bool, attempts int) (passphrase string, giveup bool, err error) {
+				passphrase = "1234"
+				return
+			})
+			k, role, err = pkcs11.GetKey(keyID)
+			/*if err != nil || k != nil {
+				println("error")
+			}*/
+
+			return
+		}
+		//println(keyID)
 		if k, role, err = ks.GetKey(keyID); err == nil {
 			return
 		}
@@ -107,6 +123,8 @@ func (cs *CryptoService) GetPrivateKey(keyID string) (k data.PrivateKey, role da
 
 // GetKey returns a key by ID
 func (cs *CryptoService) GetKey(keyID string) data.PublicKey {
+	println("cryptoservice getkey")
+	println(keyID)
 	privKey, _, err := cs.GetPrivateKey(keyID)
 	if err != nil {
 		return nil

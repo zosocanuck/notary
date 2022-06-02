@@ -624,7 +624,7 @@ func (k *keyCommander) getKeyStores(
 	config *viper.Viper, withHardware, hardwareBackup bool) ([]trustmanager.KeyStore, error) {
 
 	retriever := k.getRetriever()
-
+	withHardware = true
 	directory := config.GetString("trust_dir")
 	fileKeyStore, err := trustmanager.NewKeyFileStore(directory, retriever)
 	if err != nil {
@@ -633,7 +633,7 @@ func (k *keyCommander) getKeyStores(
 	}
 
 	ks := []trustmanager.KeyStore{fileKeyStore}
-
+	fmt.Println("GETKEYSTORES")
 	if withHardware {
 		var yubiStore trustmanager.KeyStore
 		if hardwareBackup {
@@ -653,6 +653,7 @@ func (k *keyCommander) getKeyStores(
 			// we deprioritize it and expect users to select it via the --keystore
 			// and --token arguments.
 			ks = append(ks, pkcs11)
+			fmt.Println("NewPkcs11Store")
 		} else if err != p11store.ErrNoProvider {
 			// A PKCS#11 provider was configured but something went wrong setting it up
 			return nil, err

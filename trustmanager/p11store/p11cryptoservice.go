@@ -2,6 +2,7 @@ package p11store
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/theupdateframework/notary/trustmanager"
 	"github.com/theupdateframework/notary/tuf/data"
@@ -28,6 +29,7 @@ func (ps *Pkcs11CryptoService) AddKey(role data.RoleName, gun data.GUN, key data
 }
 
 func (ps *Pkcs11CryptoService) GetKey(keyID string) (pubKey data.PublicKey) {
+	fmt.Println(keyID)
 	privKey, _, err := ps.Store.GetKey(keyID)
 	if err != nil {
 		return

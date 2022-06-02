@@ -118,6 +118,8 @@ func (p *Pkcs11Store) GetKey(keyID string) (privKey data.PrivateKey, role data.R
 	if info, session, _, privateObject, err = p.findKey(keyID); err != nil {
 		return
 	}
+	println("Venafi GetKey")
+	fmt.Println(keyID)
 	// Extend data.TUFKey with additional information to allow use through PKCS#11
 	// and crypto.Signer.
 	privKey = &Pkcs11PrivateKey{
@@ -601,6 +603,8 @@ func (p *Pkcs11Store) findKey(keyID string) (info pkcs11KeyInfo, session pkcs11.
 	if session, err = p.getSession(info.slot); err != nil {
 		return
 	}
+	fmt.Println("finding key")
+	fmt.Println(string(info.id))
 	// Find the private key
 	searchAttributes := []*pkcs11.Attribute{
 		pkcs11.NewAttribute(pkcs11.CKA_TOKEN, true),
@@ -625,7 +629,8 @@ func (p *Pkcs11Store) findKey(keyID string) (info pkcs11KeyInfo, session pkcs11.
 			privateObject = object
 		} else {
 			if publicObject != 0 {
-				err = fmt.Errorf("multiple PKSC#11 public key objects for %s", keyID)
+				//Venafi PKCS#11 driver is returning empty CKA_CLASS which is probably causing this error to be returned.
+				//err = fmt.Errorf("multiple PKSC#11 public key objects for %s", keyID)
 				return
 			}
 			publicObject = object

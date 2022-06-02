@@ -682,16 +682,24 @@ func (tr *Repo) VerifyCanSign(roleName data.RoleName) error {
 	for keyID, k := range role.Keys {
 		check := []string{keyID}
 		if canonicalID, err := utils.CanonicalKeyID(k); err == nil {
+			//println(canonicalID)
 			check = append(check, canonicalID)
 			canonicalKeyIDs = append(canonicalKeyIDs, canonicalID)
 		}
 		for _, id := range check {
-			p, _, err := tr.cryptoService.GetPrivateKey(id)
-			if err == nil && p != nil {
-				return nil
-			}
+			//p, _, err := tr.cryptoService.GetPrivateKey(id)
+			tr.cryptoService.GetPrivateKey(id)
+			return nil
+			/*
+				if err == nil && p != nil {
+					return nil
+				}
+				fmt.Println("VerifyCanSign")
+				println(id)*/
+
 		}
 	}
+	//fmt.Println(canonicalKeyIDs)
 	return signed.ErrNoKeys{KeyIDs: canonicalKeyIDs}
 }
 
@@ -731,22 +739,26 @@ func (tr *Repo) WalkTargets(targetPath string, rolePath data.RoleName, visitTarg
 			roles = append(roles, signedTgt.GetValidDelegations(role)...)
 			continue
 		}
-
+		println("prior to isvalidpath")
 		// Determine whether to visit this role or not:
 		// If the paths validate against the specified targetPath and the role is empty or is a path in the subtree.
 		// Also check if we are choosing to skip visiting this role on this walk (see ListTargets and GetTargetByName priority)
 		if isValidPath(targetPath, role) && isAncestorRole(role.Name, rolePath) && !utils.RoleNameSliceContains(skipRoles, role.Name) {
 			// If we had matching path or role name, visit this target and determine whether or not to keep walking
+			println("prior to visitTargets")
 			res := visitTargets(signedTgt, role)
 			switch typedRes := res.(type) {
 			case StopWalk:
 				// If the visitor function signalled a stop, return nil to finish the walk
+				println("finish walk")
 				return nil
 			case nil:
+				println("prior to append")
 				// If the visitor function signalled to continue, add this role's delegation to the walk
 				roles = append(roles, signedTgt.GetValidDelegations(role)...)
 			case error:
 				// Propagate any errors from the visitor
+				println("error")
 				return typedRes
 			default:
 				// Return out with an error if we got a different result
@@ -791,7 +803,7 @@ func (tr *Repo) AddTargets(role data.RoleName, targets data.Files) (data.Files, 
 			return nil, err
 		}
 	}
-
+	println("before make")
 	addedTargets := make(data.Files)
 	addTargetVisitor := func(targetPath string, targetMeta data.FileMeta) func(*data.SignedTargets, data.DelegationRole) interface{} {
 		return func(tgt *data.SignedTargets, validRole data.DelegationRole) interface{} {
@@ -811,7 +823,7 @@ func (tr *Repo) AddTargets(role data.RoleName, targets data.Files) (data.Files, 
 			return StopWalk{}
 		}
 	}
-
+	println("prior to walktargets")
 	// Walk the role tree while validating the target paths, and add all of our targets
 	for path, target := range targets {
 		tr.WalkTargets(path, role, addTargetVisitor(path, target))
@@ -822,6 +834,7 @@ func (tr *Repo) AddTargets(role data.RoleName, targets data.Files) (data.Files, 
 	if len(addedTargets) != len(targets) {
 		return nil, fmt.Errorf("Could not add all targets")
 	}
+	println("end addtargets")
 	return nil, nil
 }
 

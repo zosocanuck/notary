@@ -36,6 +36,7 @@ func applyChangelist(repo *tuf.Repo, invalid *tuf.Repo, cl changelist.Changelist
 		return err
 	}
 	index := 0
+	println("inside applyChangelist")
 	for it.HasNext() {
 		c, err := it.Next()
 		if err != nil {
@@ -44,8 +45,10 @@ func applyChangelist(repo *tuf.Repo, invalid *tuf.Repo, cl changelist.Changelist
 		isDel := data.IsDelegation(c.Scope()) || data.IsWildDelegation(c.Scope())
 		switch {
 		case c.Scope() == changelist.ScopeTargets || isDel:
+			println("applytargetschange")
 			err = applyTargetsChange(repo, invalid, c)
 		case c.Scope() == changelist.ScopeRoot:
+			println("applyrootchange")
 			err = applyRootChange(repo, c)
 		default:
 			return fmt.Errorf("scope not supported: %s", c.Scope().String())
@@ -63,8 +66,10 @@ func applyChangelist(repo *tuf.Repo, invalid *tuf.Repo, cl changelist.Changelist
 func applyTargetsChange(repo *tuf.Repo, invalid *tuf.Repo, c changelist.Change) error {
 	switch c.Type() {
 	case changelist.TypeTargetsTarget:
+		println("before changetargetmeta")
 		return changeTargetMeta(repo, c)
 	case changelist.TypeTargetsDelegation:
+		println("before changetargetsdelegation")
 		return changeTargetsDelegation(repo, c)
 	case changelist.TypeWitness:
 		return witnessTargets(repo, invalid, c.Scope())
@@ -103,7 +108,7 @@ func changeTargetsDelegation(repo *tuf.Repo, c changelist.Change) error {
 		if err != nil {
 			return err
 		}
-
+		println("changetargetsdelegation")
 		// We need to translate the keys from canonical ID to TUF ID for compatibility
 		canonicalToTUFID := make(map[string]string)
 		for tufID, pubKey := range delgRole.Keys {
@@ -145,9 +150,11 @@ func changeTargetMeta(repo *tuf.Repo, c changelist.Change) error {
 		files := data.Files{c.Path(): *meta}
 
 		// Attempt to add the target to this role
+		println("before addtargets")
 		if _, err = repo.AddTargets(c.Scope(), files); err != nil {
 			logrus.Errorf("couldn't add target to %s: %s", c.Scope(), err.Error())
 		}
+		println("after addtargets")
 
 	case changelist.ActionDelete:
 		logrus.Debug("changelist remove: ", c.Path())

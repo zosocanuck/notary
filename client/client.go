@@ -558,6 +558,7 @@ func (r *repository) getRemoteStore() store.RemoteStore {
 // Publish pushes the local changes in signed material to the remote notary-server
 // Conceptually it performs an operation similar to a `git rebase`
 func (r *repository) Publish() error {
+	println("INSIDE publish()")
 	if err := r.publish(r.changelist); err != nil {
 		return err
 	}
@@ -573,6 +574,7 @@ func (r *repository) Publish() error {
 // publish pushes the changes in the given changelist to the remote notary-server
 // Conceptually it performs an operation similar to a `git rebase`
 func (r *repository) publish(cl changelist.Changelist) error {
+	println("private publish()")
 	var initialPublish bool
 	// update first before publishing
 	if err := r.updateTUF(true); err != nil {
@@ -601,11 +603,13 @@ func (r *repository) publish(cl changelist.Changelist) error {
 			return err
 		}
 	}
+	println("before applychangelist")
 	// apply the changelist to the repo
 	if err := applyChangelist(r.tufRepo, r.invalid, cl); err != nil {
 		logrus.Debug("Error applying changelist")
 		return err
 	}
+	println("after applychangelist")
 
 	// these are the TUF files we will need to update, serialized as JSON before
 	// we send anything to remote
@@ -623,7 +627,7 @@ func (r *repository) publish(cl changelist.Changelist) error {
 	if err := signRootIfNecessary(updatedFiles, r.tufRepo, legacyKeys, initialPublish); err != nil {
 		return err
 	}
-
+	println("before signtargets")
 	if err := signTargets(updatedFiles, r.tufRepo, initialPublish); err != nil {
 		return err
 	}
